@@ -35,11 +35,10 @@
    (scan text []))
 
   ([text tokens]
-   (if (string? text)
-     (scan (first text) (rest text) tokens)
-     text
-     ))
+   (scan (first text) (rest text) tokens))
 
   ([c cs tokens]
    (let [token (match-token c)]
-     (scan cs (conj tokens token)))))
+     (if (and (not (char? c)) (empty? c))
+       (conj tokens :lox.token/eof)
+       (scan cs (conj tokens token))))))
