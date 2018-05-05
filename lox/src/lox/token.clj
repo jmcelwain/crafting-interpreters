@@ -1,7 +1,8 @@
 (ns lox.token)
 
+;; single tokens
 ::l-paren
-::r-parent
+::r-paren
 ::l-brace
 ::r-brace
 ::comma
@@ -25,6 +26,7 @@
 ::string
 ::number
 
+;; keywords
 ::and
 ::class
 ::else

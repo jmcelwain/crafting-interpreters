@@ -6,17 +6,10 @@
 
 (defrecord Token [type lexeme literal line])
 
-(defn scan
-  [[c & cs] tokens]
-  (if (nil? c)
-    tokens
-    (scan cs (conj tokens :lox.token/l-brace))))
-
 (defn run [text]
-  (let [tokens (scan text)]
+  (let [tokens (lox.scan/scan text)]
     (doseq [token tokens]
       (println token))))
-
 
 (defn file [file])
 
