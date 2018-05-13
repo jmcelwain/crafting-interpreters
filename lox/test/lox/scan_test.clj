@@ -18,3 +18,7 @@
 (t/deftest scan-two-char-token-no-match
   (t/testing "Scanning a two character token with failed match")
   (t/is (= [:lox.token/bang :lox.token/l-brace :lox.token/eof] (sut/tokenize "!{"))))
+
+(t/deftest scan-comments
+  (t/testing "Scanning comment")
+  (t/is (= [:lox.token/bang :lox.token/eof] (sut/tokenize "//this is a comment\n!"))))

@@ -57,13 +57,20 @@
                   (add-token (advance scan) :lox.token/greater-equal)
                   (add-token scan :lox.token/greater))
 
+           ;; slash
+           [\/] (if (match? scan \/)
+                  (loop [{:keys [char] :as scan} (advance scan)]
+                    (if (or (is-finished? scan) (= char \newline))
+                      scan
+                      (recur (advance scan))))
+                  (add-token scan :lox.token/slash))
            :else (throw (Exception. (str "Could not scan " scan))))))
 
 (defn init [text]
   {:start 0 :current 0 :line 1 :text text :tokens [] :char nil})
 
-(defn is-finished? [{:keys [current text]}]
-  (>= current (count text)))
+(defn is-finished? [{:keys [current text] :as scan}]
+  (or (nil? scan) (>= current (count text))))
 
 (defn scan-tokens [{:keys [current tokens] :as scan}]
   (if (is-finished? scan)
