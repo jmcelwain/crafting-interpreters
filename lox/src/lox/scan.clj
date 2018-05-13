@@ -19,26 +19,38 @@
     "var"    :lox.token/var
     "while"  :lox.token/while })
 
+(defn advance [{:keys [current text] :as scan}]
+  (assoc scan :current (inc current) :char (get text current)))
 
-(defn match-token [c]
-  (match [c]
-         [\(] :lox.token/l-paren
-         [\)] :lox.token/r-paren
-         [\{] :lox.token/l-brace
-         [\}] :lox.token/r-brace
-         :else nil
-         ))
+(defn match-token [{:keys [tokens] :as scan}]
+  (let [scan   (advance scan)
+        char  (:char scan)
+        token (match [char]
+                [\(] :lox.token/l-paren
+                [\)] :lox.token/r-paren
+                [\{] :lox.token/l-brace
+                [\}] :lox.token/r-brace
+                :else nil)]
+
+    (if (nil? token)
+      (throw (Exception. (str "Could not scan " scan)))
+      (assoc scan :tokens (conj tokens token)))))
+
+(defn init [text]
+  {:start 0 :current 0 :line 1 :text text :tokens [] :char nil})
+
+(defn is-finished? [{:keys [current text]}]
+  (>= current (count text)))
+
+(defn scan-tokens [{:keys [current tokens] :as scan}]
+  (if (is-finished? scan)
+    (conj tokens :lox.token/eof)
+    (let [scan (assoc scan :start current)]
+      (scan-tokens (match-token scan)))))
+
+(defn tokenize [text]
+  (let [scan (init text)]
+    (scan-tokens scan)))
 
 
-(defn scan
-  ([text]
-   (scan text []))
 
-  ([text tokens]
-   (scan (first text) (rest text) tokens))
-
-  ([c cs tokens]
-   (let [token (match-token c)]
-     (if (and (not (char? c)) (empty? c))
-       (conj tokens :lox.token/eof)
-       (scan cs (conj tokens token))))))
