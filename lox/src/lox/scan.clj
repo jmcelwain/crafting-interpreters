@@ -25,6 +25,9 @@
 (defn add-token [{:keys [tokens] :as scan} token]
   (assoc scan :tokens (conj tokens token)))
 
+(defn match? [{:keys [text current] :as scan} expected]
+  (and (not (is-finished? scan)) (= expected (get text current))))
+
 (defn match-token [{:keys [tokens] :as scan}]
   (let [scan  (advance scan)
         char  (:char scan)]
@@ -41,6 +44,19 @@
            [\;] (add-token scan :lox.token/semicolon)
            [\*] (add-token scan :lox.token/star)
            ;; two-char
+           [\!] (if (match? scan \=)
+                  (add-token (advance scan) :lox.token/bang-equal)
+                  (add-token scan :lox.token/bang))
+           [\=] (if (match? scan \=)
+                  (add-token (advance scan) :lox.token/equal-equal)
+                  (add-token scan :lox.token/equal))
+           [\<] (if (match? scan \=)
+                  (add-token (advance scan) :lox.token/less-equal)
+                  (add-token scan :lox.token/less))
+           [\>] (if (match? scan \=)
+                  (add-token (advance scan) :lox.token/greater-equal)
+                  (add-token scan :lox.token/greater))
+
            :else (throw (Exception. (str "Could not scan " scan))))))
 
 (defn init [text]
@@ -59,4 +75,3 @@
   (let [scan (init text)]
     (scan-tokens scan)))
 
- 

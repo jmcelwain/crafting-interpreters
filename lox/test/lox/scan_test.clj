@@ -10,3 +10,11 @@
 (t/deftest scan-two-single-token
   (t/testing "Scanning two individual tokens")
   (t/is (= [:lox.token/l-brace :lox.token/r-brace :lox.token/eof] (sut/tokenize "{}"))))
+
+(t/deftest scan-two-char-token
+  (t/testing "Scanning a two character token")
+  (t/is (= [:lox.token/bang-equal :lox.token/eof] (sut/tokenize "!="))))
+
+(t/deftest scan-two-char-token-no-match
+  (t/testing "Scanning a two character token with failed match")
+  (t/is (= [:lox.token/bang :lox.token/l-brace :lox.token/eof] (sut/tokenize "!{"))))
