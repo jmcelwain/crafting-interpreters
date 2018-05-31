@@ -20,5 +20,9 @@
 
 (t/deftest scan-comments
   (t/testing "Scanning comment")
-  (t/is (= [(lox.token/->Token :lox.token/bang "!" nil 1) (lox.token/->Token :lox.token/eof "" nil 1)] (lox.scan/tokenize "!// ok wow\n")))
-  (t/is (= [(lox.token/->Token :lox.token/bang "!" nil 1) (lox.token/->Token :lox.token/eof "" nil 1)] (lox.scan/tokenize "//this is a comment\n!"))))
+  (t/is (= [(lox.token/->Token :lox.token/bang "!" nil 1) (lox.token/->Token :lox.token/eof "" nil 2)] (lox.scan/tokenize "!// ok wow\n")))
+  (t/is (= [(lox.token/->Token :lox.token/bang "!" nil 2) (lox.token/->Token :lox.token/eof "" nil 2)] (lox.scan/tokenize "//this is a comment\n!"))))
+
+(t/deftest scan-newline
+  (t/testing "Scanning newline")
+  (t/is (= [(lox.token/->Token :lox.token/eof "" nil 2)] (lox.scan/tokenize "\n"))))

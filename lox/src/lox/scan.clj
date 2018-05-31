@@ -34,11 +34,11 @@
   ([{:keys [tokens line] :as scan} type literal]
    (assoc scan :tokens (conj tokens (lox.token/->Token type (get-text scan) literal line)))))
 
+(defn advance-line [{:keys [line] :as scan}]
+  (assoc scan :line (inc line)))
+
 (defn match? [{:keys [text current] :as scan} expected]
   (and (not (is-finished? scan)) (= expected (get text current))))
-
-(defn add-eof [{:keys [tokens line] :as scan}]
-  (assoc scan :tokens (conj tokens (lox.token/->Token type "" nil (+ line 1)))))
 
 (defn match-token [{:keys [tokens] :as scan}]
   (let [scan  (advance scan)
@@ -73,9 +73,14 @@
            [\/] (if (match? scan \/)
                   (loop [{:keys [char] :as scan} (advance scan)]
                     (if (or (is-finished? scan) (= char \newline))
-                      scan
+                      (advance-line scan)
                       (recur (advance scan))))
                   (add-token scan :lox.token/slash))
+
+           [\tab] scan
+           [\return] scan
+           [\newline] (advance-line scan)
+
            :else (throw (Exception. (str "Could not scan " scan))))))
 
 (defn init [text]
@@ -83,7 +88,7 @@
 
 (defn scan-tokens [{:keys [current tokens line] :as scan}]
   (if (is-finished? scan)
-    (conj tokens (add-eof scan))
+    (conj tokens (lox.token/->Token :lox.token/eof "" nil line))
     (let [scan (assoc scan :start current)]
       (scan-tokens (match-token scan)))))
 
