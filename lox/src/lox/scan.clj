@@ -77,6 +77,7 @@
                       (recur (advance scan))))
                   (add-token scan :lox.token/slash))
 
+           [\space] scan
            [\tab] scan
            [\return] scan
            [\newline] (advance-line scan)

@@ -26,3 +26,9 @@
 (t/deftest scan-newline
   (t/testing "Scanning newline")
   (t/is (= [(lox.token/->Token :lox.token/eof "" nil 2)] (lox.scan/tokenize "\n"))))
+
+(t/deftest scan-white-space
+  (t/testing "Scanning white space")
+  (t/is (= [(lox.token/->Token :lox.token/eof "" nil 2)] (lox.scan/tokenize "   \n")))
+  (t/is (= [(lox.token/->Token :lox.token/eof "" nil 2)] (lox.scan/tokenize (str \tab "\n"))))
+  (t/is (= [(lox.token/->Token :lox.token/eof "" nil 2)] (lox.scan/tokenize (str \tab \return \tab "\n")))))
