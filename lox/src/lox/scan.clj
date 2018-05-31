@@ -22,11 +22,23 @@
 (defn advance [{:keys [current text] :as scan}]
   (assoc scan :current (inc current) :char (get text current)))
 
-(defn add-token [{:keys [tokens] :as scan} token]
-  (assoc scan :tokens (conj tokens token)))
+(defn is-finished? [{:keys [current text] :as scan}]
+  (or (nil? scan) (>= current (count text))))
+
+(defn get-text [{:keys [start current text]}]
+  (subs text start current))
+
+(defn add-token
+  ([scan type]
+   (add-token scan type nil))
+  ([{:keys [tokens line] :as scan} type literal]
+   (assoc scan :tokens (conj tokens (lox.token/->Token type (get-text scan) literal line)))))
 
 (defn match? [{:keys [text current] :as scan} expected]
   (and (not (is-finished? scan)) (= expected (get text current))))
+
+(defn add-eof [{:keys [tokens line] :as scan}]
+  (assoc scan :tokens (conj tokens (lox.token/->Token type "" nil (+ line 1)))))
 
 (defn match-token [{:keys [tokens] :as scan}]
   (let [scan  (advance scan)
@@ -69,12 +81,9 @@
 (defn init [text]
   {:start 0 :current 0 :line 1 :text text :tokens [] :char nil})
 
-(defn is-finished? [{:keys [current text] :as scan}]
-  (or (nil? scan) (>= current (count text))))
-
-(defn scan-tokens [{:keys [current tokens] :as scan}]
+(defn scan-tokens [{:keys [current tokens line] :as scan}]
   (if (is-finished? scan)
-    (conj tokens :lox.token/eof)
+    (conj tokens (add-eof scan))
     (let [scan (assoc scan :start current)]
       (scan-tokens (match-token scan)))))
 

@@ -1,5 +1,7 @@
 (ns lox.token)
 
+(defrecord Token [type lexeme literal line])
+
 ;; single tokens
 ::l-paren
 ::r-paren
