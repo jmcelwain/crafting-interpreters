@@ -28,6 +28,9 @@
 (defn get-text [{:keys [start current text]}]
   (subs text start current))
 
+(defn get-string-literal [{:keys [start current text]}]
+  (subs text (inc start) (dec current)))
+
 (defn add-token
   ([scan type]
    (add-token scan type nil))
@@ -55,6 +58,7 @@
            [\+] (add-token scan :lox.token/plus)
            [\;] (add-token scan :lox.token/semicolon)
            [\*] (add-token scan :lox.token/star)
+
            ;; two-char
            [\!] (if (match? scan \=)
                   (add-token (advance scan) :lox.token/bang-equal)
@@ -77,10 +81,17 @@
                       (recur (advance scan))))
                   (add-token scan :lox.token/slash))
 
+           ;; white space
            [\space] scan
            [\tab] scan
            [\return] scan
            [\newline] (advance-line scan)
+
+           ;; string
+           [\"] (loop [{:keys [char] :as scan} (advance scan)]
+                  (if (or (is-finished? scan) (= char \"))
+                    (add-token scan :lox.token/string (get-string-literal scan))
+                    (recur (advance scan))))
 
            :else (throw (Exception. (str "Could not scan " scan))))))
 

@@ -32,3 +32,7 @@
   (t/is (= [(lox.token/->Token :lox.token/eof "" nil 2)] (lox.scan/tokenize "   \n")))
   (t/is (= [(lox.token/->Token :lox.token/eof "" nil 2)] (lox.scan/tokenize (str \tab "\n"))))
   (t/is (= [(lox.token/->Token :lox.token/eof "" nil 2)] (lox.scan/tokenize (str \tab \return \tab "\n")))))
+
+(t/deftest scan-string
+  (t/testing "Scanning a string")
+  (t/is (= [(lox.token/->Token :lox.token/string "\"str\"" "str" 1) (lox.token/->Token :lox.token/eof "" nil 1)] (lox.scan/tokenize "\"str\""))))
