@@ -37,3 +37,9 @@
   (t/testing "Scanning a string")
   (t/is (= [(lox.token/->Token :lox.token/string "\"str\"" "str" 1) (lox.token/->Token :lox.token/eof "" nil 1)] (lox.scan/tokenize "\"str\"")))
   (t/is (thrown? Exception (lox.scan/tokenize "\"str\n"))))
+
+(t/deftest scan-number
+  (t/testing "Scanning a number")
+  (t/is (= [(lox.token/->Token :lox.token/number "1" 1 1) (lox.token/->Token :lox.token/eof "" nil 1)] (lox.scan/tokenize "1")))
+  (t/is (= [(lox.token/->Token :lox.token/number "11" 11 1) (lox.token/->Token :lox.token/eof "" nil 1)] (lox.scan/tokenize "11")))
+  (t/is (= [(lox.token/->Token :lox.token/number "11.01" 11.01 1) (lox.token/->Token :lox.token/eof "" nil 1)] (lox.scan/tokenize "11.01"))))
