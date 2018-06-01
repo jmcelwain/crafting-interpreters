@@ -89,9 +89,10 @@
 
            ;; string
            [\"] (loop [{:keys [char] :as scan} (advance scan)]
-                  (if (or (is-finished? scan) (= char \"))
-                    (add-token scan :lox.token/string (get-string-literal scan))
-                    (recur (advance scan))))
+                  (cond
+                    (= char \") (add-token scan :lox.token/string (get-string-literal scan))
+                    (is-finished? scan) (throw (Exception. (str "Unterminated string")))
+                    :else (recur (advance scan))))
 
            :else (throw (Exception. (str "Could not scan " scan))))))
 
