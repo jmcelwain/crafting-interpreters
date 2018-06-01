@@ -43,3 +43,8 @@
   (t/is (= [(lox.token/->Token :lox.token/number "1" 1 1) (lox.token/->Token :lox.token/eof "" nil 1)] (lox.scan/tokenize "1")))
   (t/is (= [(lox.token/->Token :lox.token/number "11" 11 1) (lox.token/->Token :lox.token/eof "" nil 1)] (lox.scan/tokenize "11")))
   (t/is (= [(lox.token/->Token :lox.token/number "11.01" 11.01 1) (lox.token/->Token :lox.token/eof "" nil 1)] (lox.scan/tokenize "11.01"))))
+
+(t/deftest scan-identifier
+  (t/testing "Scanning an identifier")
+  (t/is (= [(lox.token/->Token :lox.token/class "class" nil 1) (lox.token/->Token :lox.token/eof "" nil 1)] (lox.scan/tokenize "class")))
+  (t/is (= [(lox.token/->Token :lox.token/this "this" nil 1) (lox.token/->Token :lox.token/eof "" nil 1)] (lox.scan/tokenize "this"))))

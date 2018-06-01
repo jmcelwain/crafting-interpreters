@@ -2,10 +2,10 @@
   (:require [clojure.core.match :refer [match]]))
 
 (def keywords
-  {"and"    :lox.core/an
-   "class"  :lox.core/class
-   "else"   :lox.core/else
-   "false"  :lox.core/false
+  {"and"    :lox.token/and
+   "class"  :lox.token/class
+   "else"   :lox.token/else
+   "false"  :lox.token/false
    "fun"    :lox.token/fun
    "for"    :lox.token/for
    "if"     :lox.token/if
@@ -50,10 +50,18 @@
   (let [char (get text current)]
     (or (digit? char) (= char \.))))
 
+(defn match-alphanumeric? [{:keys [text current] :as scan}]
+  (let [char (get text current)]
+    (or (letter? char) (digit? char))))
+
 (defn digit? [c]
   (if (nil? c) false
       (= (java.lang.Character/getType ^Character c)
          (java.lang.Character/DECIMAL_DIGIT_NUMBER))))
+
+(defn letter? [c]
+  (if (nil? c) false
+      (java.lang.Character/isLetter c)))
 
 (defn add-comment [{:keys [char] :as scan}]
   (if (match? scan \/)
@@ -74,6 +82,13 @@
   (if (match-digit? scan)
     (add-digit (advance scan))
     (add-token scan :lox.token/number (get-numeric-literal scan))))
+
+(defn add-identifier [{:keys [char] :as scan}]
+  (if (match-alphanumeric? scan)
+    (add-identifier (advance scan))
+    (if-let [type (get keywords (get-text scan))]
+      (add-token scan type)
+      (add-token scan :lox.token/identifier))))
 
 (defn match-token [{:keys [tokens char] :as scan}]
   (match [char]
@@ -117,6 +132,9 @@
 
          ;; number
          [(_ :guard digit?)] (add-digit scan)
+
+         ;; identifier
+         [(_ :guard #(or (digit? %) (letter? %)))] (add-identifier scan)
 
          ;; something went wrong
          :else (throw (Exception. (str "Could not scan " scan)))))
