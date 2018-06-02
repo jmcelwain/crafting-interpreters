@@ -46,7 +46,6 @@
 (defn match? [{:keys [text current char] :as scan} expected]
   (and (not (is-finished? scan)) (= expected (get text current))))
 
-
 (defn digit? [c]
   (if (nil? c) false
       (= (java.lang.Character/getType ^Character c)

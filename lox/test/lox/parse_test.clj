@@ -1,6 +1,6 @@
 (ns lox.parse-test
-  (:require [lox.parse :as sut]
-            [clojure.test :as t]))
+  (:require [clojure.test :as t]))
 
-
-
+(t/deftest parse-class
+  (t/testing "Parsing a class")
+  (t/is (= {} (lox.parse/parse (lox.scan/tokenize "class Name {}")))))
