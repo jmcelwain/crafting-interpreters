@@ -46,13 +46,6 @@
 (defn match? [{:keys [text current char] :as scan} expected]
   (and (not (is-finished? scan)) (= expected (get text current))))
 
-(defn match-digit? [{:keys [text current] :as scan}]
-  (let [char (get text current)]
-    (or (digit? char) (= char \.))))
-
-(defn match-alphanumeric? [{:keys [text current] :as scan}]
-  (let [char (get text current)]
-    (or (letter? char) (digit? char))))
 
 (defn digit? [c]
   (if (nil? c) false
@@ -62,6 +55,14 @@
 (defn letter? [c]
   (if (nil? c) false
       (java.lang.Character/isLetter c)))
+
+(defn match-digit? [{:keys [text current] :as scan}]
+  (let [char (get text current)]
+    (or (digit? char) (= char \.))))
+
+(defn match-alphanumeric? [{:keys [text current] :as scan}]
+  (let [char (get text current)]
+    (or (letter? char) (digit? char))))
 
 (defn add-comment [{:keys [char] :as scan}]
   (if (match? scan \/)
