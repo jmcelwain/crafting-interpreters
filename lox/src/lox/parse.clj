@@ -72,7 +72,7 @@
         [parse _] (consume parse :lox.token/l-brace "")
         [parse methods] (get-methods parse)
         [parse _] (consume parse :lox.token/r-brace "")]
-    [parse (lox.statement/->Statement name superclass methods)]))
+    [parse (lox.statement/->Clazz name superclass methods)]))
 
 (defn var-declaration [{:keys [] :as parse}])
 
