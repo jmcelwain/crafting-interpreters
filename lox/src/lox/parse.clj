@@ -13,11 +13,13 @@
   (= :lox.token/eof (:type (peek-token parse))))
 
 (defn previous [{:keys [tokens current] :as parse}]
-  (nth tokens (dec current)))
+  (let [n (max 0 (dec current))]
+    (nth tokens n)))
 
 (defn advance [{:keys [current] :as parse}]
-  (if (is-finished? parse)
-    [(assoc parse :current (inc current)) (previous parse)]))
+  (if (not (is-finished? parse))
+    (assoc parse :current (inc current))
+    parse))
 
 (defn check [parse type]
   (if (is-finished? parse) false
@@ -26,9 +28,9 @@
 (defn consume
   ([parse type] (consume parse type (str "Could not consume " (name type))))
   ([{:keys [] :as parse} type message]
-   (println parse)
    (if (check parse type)
-     (advance parse)
+     (let [parse (advance parse)]
+       [parse (previous parse)])
      (throw (Exception. message)))))
 
 (defn match? [parse & types]
@@ -39,16 +41,9 @@
     (loop [{:keys [] :as parse} parse
            params []]
       (if (match? parse :lox.token/comma)
-        (let [[parse token] (consume parse :lox.token/identifier)]
+        (let [[parse token] (consume parse :lox.token/identifier "?")]
           (recur parse (conj params token)))
         [parse params]))))
-
-(defn block [{:keys [] :as parse}]
-  (let [statements (loop [statements []]
-                     (if (and (not (check parse :lox.token/r-brace)) (not (is-finished? parse)))
-                       (recur (declaration parse))
-                       statements))]
-    [(consume :lox.token/r-brace "Expect } after block.") statements]))
 
 (defn function [{:keys [] :as parse} type]
   (let [[parse name] (consume :lox.token/identifier (str "Expect " (name type) " name."))
@@ -63,7 +58,7 @@
   (loop [methods []]
     (if (and (not (check parse :lox.token/r-brace)) (not (is-finished? parse)))
       (recur (conj methods (function ::method)))
-      methods)))
+      [parse methods])))
 
 (defn get-superclass [{:keys [] :as parse}]
   (if (match? :lox.token/less)
@@ -72,12 +67,12 @@
 
 (defn class-declaration [{:keys [] :as parse}]
   (let [parse (advance parse)
-        [parse name] (consume parse :lox.token/identifier)
+        [parse name] (consume parse :lox.token/identifier "")
         [parse superclass] (get-superclass parse)
-        [parse _] (consume parse :lox.token/l-brace)
+        [parse _] (consume parse :lox.token/l-brace "")
         [parse methods] (get-methods parse)
-        [parse _] (consume parse :lox.token/r-brace)]
-    (:lox.statment/->Statement name superclass methods)))
+        [parse _] (consume parse :lox.token/r-brace "")]
+    (lox.statement/->Statement name superclass methods)))
 
 (defn var-declaration [{:keys [] :as parse}])
 
@@ -86,13 +81,23 @@
     (match? parse :lox.token/class) (class-declaration parse)
     (match? parse :lox.token/fun) (function parse ::function)
     (match? parse :lox.token/var) (var-declaration parse)
-    :else (:lox.statment/->Statement parse)))
+    :else (lox.statement/->Statement parse)))
 
 (defn parse-statements [{:keys [statements] :as parse}]
   (if (is-finished? parse)
     (:statements parse)
     (let [parse (assoc parse :statements (conj statements (declaration parse)))]
       (parse-statements parse))))
+
+
+(defn block [{:keys [] :as parse}]
+  (let [statements (loop [statements []]
+                     (if (and (not (check parse :lox.token/r-brace)) (not (is-finished? parse)))
+                       (recur (declaration parse))
+                       statements))]
+    [(consume :lox.token/r-brace "Expect } after block.") statements]))
+
+
 
 (defn parse [tokens]
   (let [parse (init tokens)]
