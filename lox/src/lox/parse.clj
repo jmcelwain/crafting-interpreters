@@ -65,14 +65,14 @@
     (consume parse :lox.token/identifier "Expect superclass name.")
     [parse nil]))
 
-(defn class-declaration [{:keys [] :as parse}]
+(defn class-declaration [{:keys [current] :as parse}]
   (let [parse (advance parse)
-        [parse name] (consume parse :lox.token/identifier "")
+        [parse name] (consume parse :lox.token/identifier "Expected a class name")
         [parse superclass] (get-superclass parse)
         [parse _] (consume parse :lox.token/l-brace "")
         [parse methods] (get-methods parse)
         [parse _] (consume parse :lox.token/r-brace "")]
-    (lox.statement/->Statement name superclass methods)))
+    [parse (lox.statement/->Statement name superclass methods)]))
 
 (defn var-declaration [{:keys [] :as parse}])
 
@@ -86,7 +86,8 @@
 (defn parse-statements [{:keys [statements] :as parse}]
   (if (is-finished? parse)
     (:statements parse)
-    (let [parse (assoc parse :statements (conj statements (declaration parse)))]
+    (let [[parse statement] (declaration parse)
+          parse (assoc parse :statements (conj statements statement))]
       (parse-statements parse))))
 
 
