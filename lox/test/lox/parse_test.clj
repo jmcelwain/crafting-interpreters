@@ -1,5 +1,6 @@
 (ns lox.parse-test
   (:require [clojure.test :as t]
+            [lox.scan]
             [lox.statement]))
 
 (defn- get-statement [str]
@@ -15,8 +16,11 @@
 
 (t/deftest parse-function
   (t/testing "Parsing a function")
-  (let [fun (get-statement "fun simple() {}")]
-    (t/is (= "" fun))))
+  (let [fn (get-statement "fun simple() {}")]
+    (t/is (true? (instance? lox.statement.Function fn)))
+    (t/is (= (:lexeme (:name fn)) "simple"))
+    (t/is (= (count (:params fn)) 0))
+    (t/is (= (count (:body fn)) 0))))
 
 (t/deftest parse-var
   (t/testing "Parsing a var")

@@ -1,5 +1,7 @@
 (ns lox.scan
-  (:require [clojure.core.match :refer [match]]))
+  (:require
+   [lox.token]
+   [clojure.core.match :refer [match]]))
 
 (def keywords
   {"and"    :lox.token/and
