@@ -1,5 +1,7 @@
 (ns lox.parse
-  (:require [lox.statement]))
+  (:require
+   [clojure.set]
+   [lox.statement]))
 
 ::function
 ::method
@@ -34,6 +36,9 @@
 (defn init [tokens]
   {:tokens tokens :current 0 :statements []})
 
+(defn parse-identity [{:keys [tokens current statements]}]
+  (:tokens tokens :current current :statements))
+
 (defn peek-token [{:keys [tokens current] :as parse}]
   (nth tokens current))
 
@@ -58,46 +63,51 @@
   ([{:keys [] :as parse} type message]
    (if (check parse type)
      (let [parse (advance parse)]
-       [parse (previous parse)])
-       (throw (Exception. message)))))
+       (assoc parse :previous (previous parse))
+       (throw (Exception. message))))))
 
 (defn match? [parse & types]
   (some #(check parse %) types))
 
 (defn get-params [{:keys [] :as parse}]
-  (if (not (check parse :lox.token/r-paren))
-    (loop [{:keys [] :as parse} parse
-           params []]
-      (if (match? parse :lox.token/comma)
-        (let [[parse token] (consume parse :lox.token/identifier)]
-          (recur parse (conj params token)))
-        [parse params]))
-    [parse []]))
+  ;; TODO this is broken, neets let bindings to collect the parse
+  (assoc parse :params
+         (if (not (check parse :lox.token/r-paren))
+           (loop [{:keys [] :as parse} parse
+                  params []]
+             (if (match? parse :lox.token/comma)
+               (let [parse (consume parse :lox.token/identifier)]
+                 (recur parse (conj params (:previous parse))))
+               params))
+           [])))
 
 (defn get-methods [{:keys [] :as parse}]
   (loop [methods []]
     (if (and (not (check parse :lox.token/r-brace)) (not (is-finished? parse)))
       (recur (conj methods (function-declaration ::method)))
-      [parse methods])))
+      (assoc parse :methods methods))))
 
 (defn get-superclass [{:keys [] :as parse}]
-  (if (match? :lox.token/less)
-    (consume parse :lox.token/identifier)
-    [parse nil]))
+  (assoc parse :super (if (match? :lox.token/less) (consume parse :lox.token/identifier))))
+
+(defn add-statement [{:keys [statements] :as parse} statement]
+  (assoc parse :statements (conj statements statement)))
 
 (defn class-declaration [{:keys [current] :as parse}]
-  (let [parse (advance parse)
-        [parse name] (consume parse :lox.token/identifier "Expected a class name.")
-        [parse superclass] (get-superclass parse)
-        [parse _] (consume parse :lox.token/l-brace)
-        [parse methods] (get-methods parse)
-        [parse _] (consume parse :lox.token/r-brace)]
-    [parse (lox.statement/->Clazz name superclass methods)]))
+  (let [{:keys [name super methods] :as parse}
+        (-> advance
+            (consume :lox.token/identifier "Expected a class name.")
+            (clojure.set/rename-keys {:previous :name})
+            get-superclass
+            (consume :lox.token/l-brace)
+            get-methods
+            (consume :lox.token/r-brace))]
+    (add-statement parse (lox.statement/->Clazz name super methods))))
 
 (defn get-initializer [{:keys [] :as parse}]
-  (if (check parse :lox.token/equal)
-    [parse nil]
-    [parse nil]))
+  ;; TODO: Impl
+  (if (or true (check parse :lox.token/equal))
+    parse))
 
 (defn var-declaration [{:keys [] :as parse}]
   (let [[parse name] (consume parse :lox.token/identifier "Expected a variable name.")
@@ -109,35 +119,37 @@
     (match? parse :lox.token/class) (class-declaration parse)
     (match? parse :lox.token/fun) (function-declaration parse ::function)
     (match? parse :lox.token/var) (var-declaration parse)
-    :else (lox.statement/->Statement parse)))
+    :else (add-statement parse (lox.statement/->Statement nil))))
 
 (defn get-block-statements [parse]
   (loop [statements []]
     (if (and (not (check parse :lox.token/r-brace)) (not (is-finished? parse)))
       (recur (declaration parse))
-      statements)))
+      (assoc parse :statements statements))))
 
 (defn block [{:keys [] :as parse}]
-  (let [statements (get-block-statements parse)
-        [parse _] (consume parse :lox.token/r-brace "Expect } after block.")]
-    [parse statements]))
+  (let [parse
+        (-> parse
+            get-block-statements
+            (consume :lox.token/r-brace "Expect } after block."))]
+    parse))
 
 (defn function-declaration [{:keys [] :as parse} type]
-  (let [parse (advance parse)
-        [parse fn-name] (consume parse :lox.token/identifier (str "Expect " (name type) " name."))
-        [parse _] (consume parse :lox.token/l-paren (str "Expect ( after " (name type) " name."))
-        [parse params] (get-params parse)
-        [parse _] (consume parse :lox.token/r-paren (str "Expect ) after params."))
-        [parse _] (consume parse :lox.token/l-brace (str "Expect { " (name type) " body."))
-        [parse body] (block parse)]
-    [parse (lox.statement/->Function fn-name params body)]))
+  (let [{:keys [name params body] :as params}
+        (-> parse
+            advance
+            (consume :lox.token/l-paren (str "Expect ( after " (name type) " name."))
+            (clojure.set/rename-keys {:previous :name})
+            get-params
+            (consume :lox.token/r-paren (str "Expect ) after params."))
+            (consume :lox.token/l-brace (str "Expect { " (name type) " body."))
+            block)]
+    (add-statement parse (lox.statement/->Function name params))))
 
 (defn parse-statements [{:keys [statements] :as parse}]
   (if (is-finished? parse)
     (:statements parse)
-    (let [[parse statement] (declaration parse)
-          parse (assoc parse :statements (conj statements statement))]
-      (parse-statements parse))))
+    (parse-statements (declaration parse))))
 
 (defn parse [tokens]
   (let [parse (init tokens)]
