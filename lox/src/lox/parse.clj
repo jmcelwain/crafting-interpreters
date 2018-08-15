@@ -81,7 +81,7 @@
                       add-params)]
 
         (if (match? parse :lox.token/comma)
-          (recur parse)
+          (recur (advance parse))
           (advance parse))))
     (assoc parse :params [])))
 
