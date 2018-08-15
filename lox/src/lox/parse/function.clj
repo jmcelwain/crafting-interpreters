@@ -31,7 +31,7 @@
             (lox.parse.common/consume :lox.token/r-brace "Expect } after block."))]
     parse))
 
-(defn function-declaration [{:keys [] :as parse} type]
+(defn ->Function [{:keys [] :as parse} type]
   (let [{:keys [name params body] :as parse}
         (-> parse
             lox.parse.common/advance

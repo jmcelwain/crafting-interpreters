@@ -13,7 +13,7 @@
 (defn get-superclass [{:keys [] :as parse}]
   (assoc parse :super (if (lox.parse.common/match? :lox.token/less) (lox.parse.common/consume parse :lox.token/identifier))))
 
-(defn class-declaration [{:keys [current] :as parse}]
+(defn ->Clazz [{:keys [current] :as parse}]
   (let [{:keys [name super methods] :as parse}
         (-> parse
             lox.parse.common/advance
