@@ -3,9 +3,12 @@
             [lox.scan]
             [lox.statement]))
 
+;; util
 (defn- get-statement [str]
   (first (lox.parse/parse (lox.scan/tokenize str))))
 
+
+;; main api
 (t/deftest parse-class
   (t/testing "Parsing a class")
   (let [clazz (get-statement  "class Name {}")]
@@ -27,4 +30,17 @@
   (let [var (get-statement "var x = 1")]
     (t/is (= " var"))))
 
+;; internal helpers
+(t/deftest get-params
+  (t/testing "Getting parameters from a function or method")
 
+  (let [no-params (lox.parse/init (lox.scan/tokenize "fun noParams() {}"))
+        {:keys [params current]} (lox.parse/get-params no-params)]
+    (t/is (= 0 (count params)))
+    (t/is (= 4 current)))
+
+  (let [single-param (lox.parse/init (lox.scan/tokenize "fun singleParam(a) {}"))
+        {:keys [params current]} (lox.parse/get-params single-param)]
+    (t/is (= 1 (count params)))
+    (t/is (= 4 current)))
+  )

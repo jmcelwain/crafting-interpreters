@@ -59,27 +59,34 @@
       (= type (:type (peek-token parse)))))
 
 (defn consume
-  ([parse type] (consume parse type (str "Could not consume " (name type))))
+  ([parse type]
+   (consume parse type (str "Could not consume " (name type))))
   ([{:keys [] :as parse} type message]
    (if (check parse type)
      (let [parse (advance parse)]
-       (assoc parse :previous (previous parse))
-       (throw (Exception. message))))))
+       (assoc parse :previous (previous parse)))
+       (throw (Exception. message)))))
 
 (defn match? [parse & types]
   (some #(check parse %) types))
 
+(defn add-params [{:keys [previous params] :as parse}]
+  (assoc parse :params (conj params previous)))
+
 (defn get-params [{:keys [] :as parse}]
   ;; TODO this is broken, neets let bindings to collect the parse
-  (assoc parse :params
-         (if (not (check parse :lox.token/r-paren))
-           (loop [{:keys [] :as parse} parse
-                  params []]
-             (if (match? parse :lox.token/comma)
-               (let [parse (consume parse :lox.token/identifier)]
-                 (recur parse (conj params (:previous parse))))
-               params))
-           [])))
+  (if (not (check parse :lox.token/r-paren))
+    (loop [{:keys [] :as parse} parse]
+      (println "!!!!")
+      (let [parse (-> parse
+                      (consume :lox.token/identifier)
+                      add-params)]
+
+        (if (match? parse :lox.token/comma)
+          (recur parse)
+          parse)))
+
+    (assoc parse :params [])))
 
 (defn get-methods [{:keys [] :as parse}]
   (loop [methods []]
@@ -95,7 +102,8 @@
 
 (defn class-declaration [{:keys [current] :as parse}]
   (let [{:keys [name super methods] :as parse}
-        (-> advance
+        (-> parse
+            advance
             (consume :lox.token/identifier "Expected a class name.")
             (clojure.set/rename-keys {:previous :name})
             get-superclass
