@@ -37,7 +37,7 @@
   {:tokens tokens :current 0 :statements []})
 
 (defn parse-identity [{:keys [tokens current statements]}]
-  (:tokens tokens :current current :statements))
+  {:tokens tokens :current current :statements statements})
 
 (defn peek-token [{:keys [tokens current] :as parse}]
   (nth tokens current))
@@ -83,7 +83,7 @@
         (if (match? parse :lox.token/comma)
           (recur parse)
           (advance parse))))
-    (advance (assoc parse :params []))))
+    (assoc parse :params [])))
 
 (defn get-methods [{:keys [] :as parse}]
   (loop [methods []]
@@ -107,7 +107,7 @@
             (consume :lox.token/l-brace)
             get-methods
             (consume :lox.token/r-brace))]
-    (add-statement parse (lox.statement/->Clazz name super methods))))
+    (parse-identity (add-statement parse (lox.statement/->Clazz name super methods)))))
 
 (defn get-initializer [{:keys [] :as parse}]
   ;; TODO: Impl
@@ -140,16 +140,18 @@
     parse))
 
 (defn function-declaration [{:keys [] :as parse} type]
-  (let [{:keys [name params body] :as params}
+  (let [{:keys [name params body] :as parse}
         (-> parse
             advance
-            (consume :lox.token/l-paren (str "Expect ( after " (name type) " name."))
+            (consume :lox.token/identifier (str "Expected a " (name type) " name."))
             (clojure.set/rename-keys {:previous :name})
+            (consume :lox.token/l-paren (str "Expect ( after " (name type) " name."))
             get-params
             (consume :lox.token/r-paren (str "Expect ) after params."))
             (consume :lox.token/l-brace (str "Expect { " (name type) " body."))
-            block)]
-    (add-statement parse (lox.statement/->Function name params))))
+            block
+            advance)]
+    (parse-identity (add-statement parse (lox.statement/->Function name params body)))))
 
 (defn parse-statements [{:keys [statements] :as parse}]
   (if (is-finished? parse)

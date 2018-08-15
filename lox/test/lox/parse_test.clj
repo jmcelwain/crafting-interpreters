@@ -7,7 +7,6 @@
 (defn- get-statement [str]
   (first (lox.parse/parse (lox.scan/tokenize str))))
 
-
 ;; main api
 (t/deftest parse-class
   (t/testing "Parsing a class")
@@ -43,7 +42,7 @@
   (let [no-params (init-get-params "fun noParams() {}")
         {:keys [params current]} (lox.parse/get-params no-params)]
     (t/is (= 0 (count params)))
-    (t/is (= 4 current)))
+    (t/is (= 3 current)))
 
   (let [single-param (init-get-params "fun singleParam(a) {}")
         {:keys [params current]} (lox.parse/get-params single-param)]
