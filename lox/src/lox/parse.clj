@@ -74,19 +74,16 @@
   (assoc parse :params (conj params previous)))
 
 (defn get-params [{:keys [] :as parse}]
-  ;; TODO this is broken, neets let bindings to collect the parse
   (if (not (check parse :lox.token/r-paren))
     (loop [{:keys [] :as parse} parse]
-      (println "!!!!")
       (let [parse (-> parse
                       (consume :lox.token/identifier)
                       add-params)]
 
         (if (match? parse :lox.token/comma)
           (recur parse)
-          parse)))
-
-    (assoc parse :params [])))
+          (advance parse))))
+    (advance (assoc parse :params []))))
 
 (defn get-methods [{:keys [] :as parse}]
   (loop [methods []]

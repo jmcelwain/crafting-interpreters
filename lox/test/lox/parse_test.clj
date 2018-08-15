@@ -31,16 +31,21 @@
     (t/is (= " var"))))
 
 ;; internal helpers
+
+(defn- init-get-params [str]
+  (let [parse (lox.parse/init (lox.scan/tokenize str))]
+    (assoc parse :current 3))) ;; fun name(_
+                              ;;  0    1 23
+
 (t/deftest get-params
   (t/testing "Getting parameters from a function or method")
 
-  (let [no-params (lox.parse/init (lox.scan/tokenize "fun noParams() {}"))
+  (let [no-params (init-get-params "fun noParams() {}")
         {:keys [params current]} (lox.parse/get-params no-params)]
     (t/is (= 0 (count params)))
     (t/is (= 4 current)))
 
-  (let [single-param (lox.parse/init (lox.scan/tokenize "fun singleParam(a) {}"))
+  (let [single-param (init-get-params "fun singleParam(a) {}")
         {:keys [params current]} (lox.parse/get-params single-param)]
     (t/is (= 1 (count params)))
-    (t/is (= 4 current)))
-  )
+    (t/is (= 5 current))))
