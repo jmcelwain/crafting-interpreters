@@ -50,5 +50,4 @@
   (let [single-param (init-get-params "fun multipleParams(a, b, c) {}")
         {:keys [params current]} (lox.parse/get-params single-param)]
     (t/is (= 3 (count params)))
-    (t/is (= 9 current)))
-  )
+    (t/is (= 9 current))))
