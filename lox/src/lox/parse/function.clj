@@ -3,10 +3,10 @@
    [lox.parse]
    [lox.parse.common]))
 
-(defn add-params [{:keys [previous params] :as parse}]
+(defn- add-params [{:keys [previous params] :as parse}]
   (assoc parse :params (conj params previous)))
 
-(defn get-params [{:keys [] :as parse}]
+(defn- get-params [{:keys [] :as parse}]
   (if (not (lox.parse.common/check parse :lox.token/r-paren))
     (loop [{:keys [] :as parse} parse]
       (let [parse (-> parse
@@ -18,13 +18,13 @@
           (lox.parse.common/advance parse))))
     (assoc parse :params [])))
 
-(defn get-block-statements [parse]
+(defn- get-block-statements [parse]
   (loop [statements []]
     (if (and (not (lox.parse.common/check parse :lox.token/r-brace)) (not (lox.parse.common/is-finished? parse)))
       (recur (lox.parse/declaration parse))
       (assoc parse :statements statements))))
 
-(defn block [{:keys [] :as parse}]
+(defn- block [{:keys [] :as parse}]
   (let [parse
         (-> parse
             get-block-statements
@@ -32,6 +32,12 @@
     parse))
 
 (defn ->Function [{:keys [] :as parse} type]
+  "
+  Constructor for a function statement. This function can be first class, or a method in the body of a class. Consumes the following tokens:
+    * An identifier for the function (or method name).
+    * An optional collection of params (identifiers).
+    * A function body / block.
+  "
   (let [{:keys [name params body] :as parse}
         (-> parse
             lox.parse.common/advance
