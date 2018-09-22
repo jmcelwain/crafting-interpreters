@@ -14,7 +14,7 @@
   (cond
     (lox.parse.common/match? parse :lox.token/class) (lox.parse.class/->Clazz parse)
     (lox.parse.common/match? parse :lox.token/fun) (lox.parse.function/->Function parse :lox.parse/function)
-    (lox.parse.common/match? parse :lox.token/var) (lox.parse.var/->Var  parse)
+    (lox.parse.common/match? parse :lox.token/var) (lox.parse.var/->Var parse)
     :else (lox.parse.common/add-statement parse (lox.statement/->Statement nil))))
 
 (defn parse-statements [{:keys [statements] :as parse}]

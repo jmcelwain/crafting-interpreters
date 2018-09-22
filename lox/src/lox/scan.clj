@@ -92,6 +92,11 @@
       (add-token scan type)
       (add-token scan :lox.token/identifier))))
 
+(defn check-eq [scan left right]
+  (if (match? scan \=)
+    (add-token (advance scan) right)
+    (add-token scan left)))
+
 (defn match-token [{:keys [tokens char] :as scan}]
   (match [char]
          ;; one-char
@@ -107,18 +112,10 @@
          [\*] (add-token scan :lox.token/star)
 
          ;; two-char
-         [\!] (if (match? scan \=)
-                (add-token (advance scan) :lox.token/bang-equal)
-                (add-token scan :lox.token/bang))
-         [\=] (if (match? scan \=)
-                (add-token (advance scan) :lox.token/equal-equal)
-                (add-token scan :lox.token/equal))
-         [\<] (if (match? scan \=)
-                (add-token (advance scan) :lox.token/less-equal)
-                (add-token scan :lox.token/less))
-         [\>] (if (match? scan \=)
-                (add-token (advance scan) :lox.token/greater-equal)
-                (add-token scan :lox.token/greater))
+         [\!] (check-eq scan :lox.token/bang :lox.token/bang-equal)
+         [\=] (check-eq scan :lox.token/equal :lox.token/equal-equal)
+         [\<] (check-eq scan :lox.token/less :lox.toknen/less-equal)
+         [\>] (check-eq scan :lox.token/greater :lox.token/greater-equal)
 
          ;; slash
          [\/] (add-comment scan)
