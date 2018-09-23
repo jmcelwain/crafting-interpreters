@@ -83,8 +83,6 @@
   "Add a fully constructed statement to the parser."
   (assoc parse :statements (conj statements statement)))
 
-
-
 ;; class
 
 (defn- get-methods [{:keys [] :as parse}]
@@ -112,7 +110,7 @@
             (consume :lox.token/l-brace)
             get-methods
             (consume :lox.token/r-brace))]
-    (parse-identity (add-statement parse (->Clazz name super methods)))))
+    (parse-identity (add-statement parse (lox.statement/->Clazz name super methods)))))
 
 
 
@@ -121,7 +119,7 @@
 (defn- add-params [{:keys [previous params] :as parse}]
   (assoc parse :params (conj params previous)))
 
-(defn- get-params [{:keys [] :as parse}]
+(defn get-params [{:keys [] :as parse}]
   (if (not (check parse :lox.token/r-paren))
     (loop [{:keys [] :as parse} parse]
       (let [parse (-> parse
@@ -164,7 +162,7 @@
             (consume :lox.token/l-brace (str "Expect { " (name type) " body."))
             block
             advance)]
-    (parse-identity (add-statement parse (->Function name params body)))))
+    (parse-identity (add-statement parse (lox.statement/->Function name params body)))))
 
 (defn parse-statements [{:keys [statements] :as parse}]
   (if (is-finished? parse)
